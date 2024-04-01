@@ -1,0 +1,136 @@
+#' Create ERD Object
+#'
+#' This function serves as a constructor for an Entity-Relationship Diagram
+#' (ERD) object. This object encapsulates both the data frames representing the
+#' entities and the relationships between these entities. The function takes as
+#' its arguments a list of data frames and a list of relationships and returns a
+#' list object of class "ERD".
+#'
+#' Possible values in each relationship element of the list include:
+#' \describe{
+#'  \item{"||" }{ which indicates one and only one}
+#'  \item{">|" }{ which indicates one or more (left table)}
+#'  \item{"|<" }{ which indicates one or more (right table)}
+#'  \item{">0" }{ which indicates zero or more (left table)}
+#'  \item{"0<" }{ which indicates zero or more (right table)}
+#'  \item{"|0" }{ which indicates zero or one (left table)}
+#'  \item{"0|" }{ which indicates zero or one (right table)}
+#' }
+#'
+#' It is imperative that the names used in \code{df_list} and relationships are
+#' consistent, as these are used for creating the ERD object and for subsequent
+#' operations like rendering and performing joins.
+#'
+#' Users can effortlessly encapsulate the data and relationships pertaining to
+#' an ERD into a single R object with this function, thereby facilitating
+#' downstream operations like rendering and joining.
+#'
+#' @param df_list A named list of data frames, where each data frame represents
+#'   an entity in the ERD. The names of the list elements correspond to the
+#'   names of the entities.
+#' @param relationships A nested named list describing the relationships between
+#'   entities. The top-level names in this list should correspond to the names
+#'   in \code{df_list}. Each element of this list is itself a list, describing
+#'   relationships that the corresponding entity has with other entities. The
+#'   list of acceptable values is specified in "Details."
+#'
+#' @return An object of class "ERD", which is a named list containing two
+#'   elements:
+#' \describe{
+#'  \item{data_frames}{Named list of data frames identical to \code{df_list}.}
+#'  \item{relationship}{Named list of relationships identical to
+#'  \code{relationships}.}
+#' }
+#' The class attribute of this list is set to "ERD".
+#' @export
+#'
+#' @examples
+#'
+#'
+#' # Load Packages -----------------------------------------------------------
+#'
+#' library(ERDbuilder)
+#' library(dplyr)
+#'
+#' # Define entities ---------------------------------------------------------
+#'
+#' students_tbl <- data.frame(
+#'   st_id = c("hu1", "de2", "lo3"),
+#'   dep_id = c("water", "evil", "values"),
+#'   student = c("Huey", "Dewey", "Louie"),
+#'   email = c("hubert.duck", "dewfort.duck", "llewellyn.duck"),
+#'   dob = c("04-15", "04-15", "04-15")
+#' )
+#'
+#' courses_tbl <- data.frame(
+#'   crs_id = c("water101", "evil205", "water202"),
+#'   fac_id = c("02do", "03pe", "04mi"),
+#'   dep_id = c("water", "evil", "water"),
+#'   course = c("Swimming", "Human-chasing", "Dives")
+#' )
+#'
+#' enrollment_tbl <- data.frame(
+#'   crs_id = c("water101", "evil205", "evil205", "water202"),
+#'   st_id = c("hu1", "hu1", "de2", "de2"),
+#'   final_grade = c("B", "A", "A", "F")
+#' )
+#'
+#' department_tbl <- data.frame(
+#'   dep_id = c("water", "evil", "values"),
+#'   department = c("Water activities", "Evil procurement", "Good values")
+#' )
+#'
+#' faculty_tbl <- data.frame(
+#'   faculty_name = c("Scrooge McDuck", "Donald", "Pete", "Mickey"),
+#'   title = c("Emeritus", "Full", "Assistant", "Full"),
+#'   fac_id = c("01sc", "02do", "03pe", "04mi"),
+#'   dep_id = c("water", "water", "evil", "values")
+#' )
+#'
+#' head(students_tbl)
+#' head(courses_tbl)
+#' head(enrollment_tbl)
+#' head(department_tbl)
+#' head(faculty_tbl)
+#'
+#' ## Define relationships----------------------------------------
+#' relationships <- list(
+#'   courses = list(
+#'     enrollment = list(crs_id = "crs_id", relationship = c("||", "|<")),
+#'     department = list(dep_id = "dep_id", relationship = c(">|", "||")),
+#'     faculty = list(fac_id = "fac_id", relationship = c(">0", "||"))
+#'   ),
+#'   enrollment = list(
+#'     students = list(st_id = "st_id", relationship = c(">0", "||")
+#'     )
+#'   ),
+#'   students = list(
+#'     department = list(dep_id = "dep_id", relationship = c(">|", "||"))
+#'   ),
+#'   faculty = list(
+#'     department = list(dep_id = "dep_id", relationship = c(">|", "||"))
+#'   )
+#' )
+#'
+#' ## Create ERD object
+#' erd_object <-
+#'   create_erd(
+#'     list(
+#'       students = students_tbl,
+#'       courses = courses_tbl,
+#'       enrollment = enrollment_tbl,
+#'       department = department_tbl,
+#'       faculty = faculty_tbl
+#'     ),
+#'     relationships)
+#'
+#' ## Render ERD -----------------------------------------------------------
+#' render_erd(erd_object, label_distance = 0, label_angle = 15, n = 20)
+create_erd <- function(df_list, relationships) {
+  erd_object <- list(
+    "data_frames" = df_list,
+    "relationships" = relationships
+  )
+  class(erd_object) <- "ERD"
+  return(erd_object)
+}
